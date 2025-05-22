@@ -1,0 +1,15 @@
+
+{
+  "manifest_version": 3,
+  "name": "快捷消息助手——designed by blackpeach",
+  "version": "0.1",
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+ "permissions": [
+    "storage",
+    "clipboardWrite",
+    "scripting",
+    "activeTab"
+  ]
+}

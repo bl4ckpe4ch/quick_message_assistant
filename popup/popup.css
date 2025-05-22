@@ -1,0 +1,186 @@
+/* src/popup/popup.css */
+body {
+  width: 500px;
+  min-height: 400px;
+  margin: 0;
+  font-family: "Microsoft YaHei", Arial, sans-serif;
+  background: #f8f9fa;
+}
+
+.container {
+  padding: 15px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* 顶部对齐 */
+  margin-bottom: 15px;
+  position: relative;
+}
+.title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+h3 {
+  margin: 0 0 2px 0; /* 增加下边距 */
+  color: #2c3e50;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.designer {
+  color: #95a5a6;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  transform: translateX(-1px); /* 破折号对齐微调 */
+}
+
+/* 按钮组优化 */
+.button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  /* height: 40px; 固定按钮容器高度 */
+}
+
+/* 统一按钮样式 */
+
+#addBtn, #exportBtn, #importBtn {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 15px; /* 胶囊按钮 */
+  transition: all 0.2s;
+  min-width: 60px; /* 保持最小宽度 */
+}
+
+/* 特定按钮颜色 */
+#exportBtn { 
+  background: #79bef7;
+  padding: 5px 12px; /* 绿色按钮稍宽 */
+}
+#importBtn { 
+  background: #8efbc6;
+  min-width: 55px; /* 紫色按钮最宽 */
+}
+/* 按钮悬停效果 */
+#addBtn:hover, #exportBtn:hover, #importBtn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 悬浮提示增强 */
+button[title]:hover::before {
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.message-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.message-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px;
+  margin: 8px 0;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.message-content {
+  flex-grow: 1;
+  cursor: pointer;
+  margin-right: 15px;
+  word-break: break-word;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.editBtn, .deleteBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+}
+
+.editBtn { color: #27ae60; }
+.deleteBtn { color: #e74c3c; }
+
+.edit-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%); /* 保持水平居中基准 */
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  z-index: 999;
+  /* 更新动画参数 */
+  animation: toastSlide 0.3s ease-out forwards;
+}
+
+@keyframes toastSlide {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px); /* 同时保持X轴居中 */
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0); /* 同时保持X轴居中 */
+  }
+}
+
+
+.loading {
+  color: #999;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.edit-textarea:after {
+  content: "Ctrl+B 加粗";
+  position: absolute;
+  right: 15px;
+  bottom: 10px;
+  color: #999;
+  font-size: 12px;
+  pointer-events: none;
+}
