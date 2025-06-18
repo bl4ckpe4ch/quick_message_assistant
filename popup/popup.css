@@ -213,29 +213,62 @@ button[title]:hover::before {
 /* 拖动手柄样式 */
 .drag-handle {
   position: absolute;
-  left: 6px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  cursor: move;
+  cursor: grab;
   color: #95a5a6;
-  font-size: 18px;
-  padding: 5px;
+  font-size: 16px;
+  padding: 8px 4px;
   user-select: none;
   touch-action: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 /* 拖拽状态下的样式 */
 .message-item.dragging {
-  opacity: 0.8;
+  opacity: 0.9;
   background-color: #f8f9fa;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  transform: rotate(2deg);
   transition: none !important; /* 拖拽时禁用动画 */
 }
 
 /* 拖拽目标位置的样式 */
 .message-item.drag-over {
-  border-top: 2px solid #3498db;
-  box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+  border-top: 3px solid #3498db;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.4);
+  transform: translateY(2px);
+}
+
+/* 拖拽到底部的特殊样式 */
+.message-item.drag-over-bottom {
+  border-top: none;
+  border-bottom: 3px solid #3498db;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.4);
+  transform: translateY(-2px);
+}
+
+.message-item.drag-over-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #3498db;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
 }
 
 /* 调整消息内容位置 */
@@ -247,46 +280,64 @@ button[title]:hover::before {
   line-height: 1.4;
   white-space: pre-wrap;
   /* 添加左侧空间给手柄 */
-  margin-left: 25px;
-}
-/* 添加以下CSS规则 */
-.message-item {
-  /* 确保元素默认有相对定位 */
-  position: relative;
-}
-
-.dragging {
-  /* 拖拽时增强视觉效果 */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  margin-left: 35px;
 }
 
 .drag-placeholder {
-  background: rgba(52, 152, 219, 0.1);
+  background: rgba(52, 152, 219, 0.08);
   border: 2px dashed #3498db;
   margin: 8px 0;
   border-radius: 6px;
   box-sizing: border-box;
-}
-.placeholder-highlight {
-  /* 添加动画效果 */
   animation: placeholder-pulse 1.5s infinite;
 }
 
 @keyframes placeholder-pulse {
-  0% { background: rgba(52, 152, 219, 0.1); }
-  50% { background: rgba(52, 152, 219, 0.3); }
-  100% { background: rgba(52, 152, 219, 0.1); }
+  0% { 
+    background: rgba(52, 152, 219, 0.08);
+    border-color: #3498db;
+  }
+  50% { 
+    background: rgba(52, 152, 219, 0.2);
+    border-color: #2980b9;
+  }
+  100% { 
+    background: rgba(52, 152, 219, 0.08);
+    border-color: #3498db;
+  }
 }
 
 /* 优化上拖拽的高亮效果 */
 .drag-over-top::before {
   content: "";
   position: absolute;
-  top: -6px;
+  top: -4px;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background-color: #3498db;
   border-radius: 2px;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
+}
+
+/* 尾元素样式 */
+.tail-element {
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  pointer-events: none;
+  position: relative;
+}
+
+/* 当拖拽到底部时，尾元素可以接收拖拽 */
+.tail-element.drag-target {
+  pointer-events: auto;
+  background: rgba(52, 152, 219, 0.1);
+  border: 2px dashed #3498db;
+  height: 40px;
+  margin: 8px 0;
+  border-radius: 6px;
+  animation: placeholder-pulse 1.5s infinite;
 }
 

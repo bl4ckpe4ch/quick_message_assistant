@@ -6,7 +6,12 @@ document.addEventListener('DOMContentLoaded', initApp);
 const PRESET_MESSAGES = [
   { id: 1, content: "10.25是的生日🎂，别忘记了" },
   { id: 2, content: "我要自动拿到每个标签页的标题：{{/html/head/title}}" },
-  { id: 3, content: "你好，xxx（页面固定位置可使用xpath模板），请你及时联系我，我的电话是xxx" }
+  { id: 3, content: "你好，xxx（页面固定位置可使用xpath模板），请你及时联系我，我的电话是xxx" },
+  { id: 4, content: "你好，xxx44444444" },
+  { id: 5, content: "你好，xxx（55555555555555" },
+  { id: 6, content: "你好，xxx（页面6666666666666666666是xxx" },
+  { id: 6, content: "你好，xxx（页面777777777777777777777，我的电话是xxx" }
+
 ];
 // const PLACEHOLDER_REGEX = /\{\{(.+?)\}\}/g;
 const PLACEHOLDER_REGEX = /([@「]?)\{\{(.+?)\}\}([」]?)(\s*)/g;
@@ -80,9 +85,8 @@ function setupDragSorting() {
   let startMouseY = 0;
   let dragOffsetY = 0;
   let listTop = 0;
+  let originalIndex = 0;
   
-  // 移除自动滚动相关变量
-
   function startDrag(e) {
     if (e.type === 'touchstart' && e.touches) {
       e = e.touches[0];
@@ -93,6 +97,9 @@ function setupDragSorting() {
 
     isDragging = true;
     dragItem = e.target.closest('.message-item');
+    
+    // 记录原始位置索引
+    originalIndex = Array.from(messageList.querySelectorAll('.message-item')).indexOf(dragItem);
     
     // 记录初始位置
     const rect = dragItem.getBoundingClientRect();
@@ -115,25 +122,19 @@ function setupDragSorting() {
     dragItem.style.top = `${rect.top}px`;
     dragItem.style.left = `${rect.left}px`;
     
-    // 添加事件监听 - 增加滚轮事件监听
+    // 添加事件监听
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: true });
-    document.addEventListener('wheel', onWheelScroll, { passive: false }); // 新增
+    document.addEventListener('wheel', onWheelScroll, { passive: false });
     document.addEventListener('mouseup', stopDrag);
     document.addEventListener('touchend', stopDrag);
   }
 
-  // 新增：滚轮滚动处理函数
   function onWheelScroll(e) {
     if (!isDragging) return;
     
-    // 计算滚动方向和距离
-    const scrollDelta = e.deltaY * 0.5; // 调整滚动速度
-    
-    // 平滑滚动消息列表
+    const scrollDelta = e.deltaY * 0.5;
     messageList.scrollTop += scrollDelta;
-    
-    // 阻止默认行为以处理手动滚动
     e.preventDefault();
   }
 
@@ -148,69 +149,104 @@ function setupDragSorting() {
       // 更新拖拽项位置
       dragItem.style.top = `${clientY - dragOffsetY}px`;
       
-      // 计算相对位置
-      const dragRect = dragItem.getBoundingClientRect();
-      const dragBottom = dragRect.bottom;
-      const dragTop = dragRect.top;
-      const dragHeight = dragRect.height;
+      // 获取所有消息项（排除占位符和拖拽项）
+      const targetItems = Array.from(messageList.querySelectorAll('.message-item:not(.dragging)'));
+      const tailElement = document.getElementById('tailElement');
       
       // 清除所有元素的标记
-      items.forEach(item => item.classList.remove('drag-over', 'drag-over-top'));
+      targetItems.forEach(item => {
+        item.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom');
+      });
+      tailElement.classList.remove('drag-target');
       
-      // 找到最接近的元素
-      let closestItem = null;
-      let minDistance = Infinity;
-      let insertPosition = 'after';
+      // 计算拖拽项中心点
+      const dragRect = dragItem.getBoundingClientRect();
+      const dragCenterY = dragRect.top + dragRect.height / 2;
       
-      for (const targetItem of messageList.querySelectorAll('.message-item:not(.dragging)')) {
-        if (targetItem === dragItem) continue;
+      // 检查是否拖拽到尾元素区域
+      const tailRect = tailElement.getBoundingClientRect();
+      const isOverTail = dragCenterY > tailRect.top;
+      
+      if (isOverTail) {
+        // 拖拽到尾元素区域
+        tailElement.classList.add('drag-target');
+        console.log('拖拽到尾元素区域');
         
-        const targetRect = targetItem.getBoundingClientRect();
-        const targetCenterY = targetRect.top + targetRect.height / 2;
+        // 隐藏占位符，因为拖拽到尾元素时不需要占位符
+        if (dragPlaceholder && dragPlaceholder.parentNode) {
+          dragPlaceholder.style.display = 'none';
+        }
+      } else {
+        // 正常的位置检测
+        // 确保占位符可见
+        if (dragPlaceholder) {
+          dragPlaceholder.style.display = '';
+        }
         
-        // 向上拖拽
-        if (dragTop < targetCenterY) {
-          const distance = Math.abs(dragBottom - targetRect.top);
-          if (distance < minDistance) {
-            minDistance = distance;
+        let insertIndex = targetItems.length; // 默认插入到最后
+        let closestItem = null;
+        
+        // 遍历所有目标项，找到正确的插入位置
+        for (let i = 0; i < targetItems.length; i++) {
+          const targetItem = targetItems[i];
+          const targetRect = targetItem.getBoundingClientRect();
+          const targetCenterY = targetRect.top + targetRect.height / 2;
+          
+          // 使用元素高度的一半作为判定距离
+          const threshold = targetRect.height / 2;
+          
+          // 如果拖拽项中心在目标项中心之上，则插入到该位置
+          if (dragCenterY < targetCenterY - threshold) {
+            insertIndex = i;
             closestItem = targetItem;
-            insertPosition = 'before';
-          }
-        } 
-        // 向下拖拽
-        else {
-          const distance = Math.abs(dragTop - targetRect.bottom);
-          if (distance < minDistance) {
-            minDistance = distance;
-            closestItem = targetItem;
-            insertPosition = 'after';
+            break;
           }
         }
-      }
-      
-      // 高亮最接近的元素
-      if (closestItem && minDistance < dragHeight * 1.5) {
-        closestItem.classList.add('drag-over');
-        if (insertPosition === 'before') {
-          closestItem.classList.add('drag-over-top');
+        
+        // 如果循环结束但没有找到位置，说明拖拽到最后
+        if (insertIndex === targetItems.length && targetItems.length > 0) {
+          closestItem = targetItems[targetItems.length - 1];
+        }
+        
+        // 调试日志
+        console.log(`拖拽位置: ${dragCenterY}, 目标索引: ${insertIndex}, 总项目数: ${targetItems.length}, 目标项:`, closestItem?.textContent?.substring(0, 20) || '无');
+        
+        // 高亮目标项
+        if (closestItem) {
+          closestItem.classList.add('drag-over');
+          if (insertIndex === targetItems.length) {
+            // 拖拽到底部，高亮最后一个元素
+            closestItem.classList.add('drag-over-bottom');
+          } else {
+            closestItem.classList.add('drag-over-top');
+          }
         }
         
         // 更新占位符位置
-        if (insertPosition === 'before' && dragPlaceholder.previousElementSibling !== closestItem) {
-          messageList.insertBefore(dragPlaceholder, closestItem);
-        } 
-        else if (insertPosition === 'after' && dragPlaceholder.nextElementSibling !== closestItem) {
-          messageList.insertBefore(dragPlaceholder, closestItem.nextSibling);
+        const currentPlaceholderIndex = Array.from(messageList.children).indexOf(dragPlaceholder);
+        let targetIndex = insertIndex;
+        
+        // 调整目标索引，考虑占位符的存在
+        if (currentPlaceholderIndex !== -1 && currentPlaceholderIndex < targetIndex) {
+          targetIndex++;
         }
-      }
-      // 处理拖拽到列表边缘的情况
-      else if (!closestItem && items.length > 0) {
-        if (dragTop < listTop + 50) {
-          // 拖到顶部
-          messageList.insertBefore(dragPlaceholder, items[0]);
-        } else {
-          // 拖到底部
-          messageList.appendChild(dragPlaceholder);
+        
+        // 只有当目标位置真正改变时才移动占位符
+        if (currentPlaceholderIndex !== targetIndex) {
+          console.log(`移动占位符: ${currentPlaceholderIndex} -> ${targetIndex}, 插入索引: ${insertIndex}, 总项目数: ${targetItems.length}`);
+          
+          if (targetIndex === 0) {
+            // 插入到第一个位置
+            messageList.insertBefore(dragPlaceholder, messageList.firstChild);
+          } else if (targetIndex >= messageList.children.length) {
+            // 插入到最后
+            messageList.appendChild(dragPlaceholder);
+            console.log('已添加到列表末尾');
+          } else {
+            // 插入到中间位置
+            const targetElement = messageList.children[targetIndex];
+            messageList.insertBefore(dragPlaceholder, targetElement);
+          }
         }
       }
       
@@ -224,41 +260,57 @@ function setupDragSorting() {
     // 完成拖拽
     isDragging = false;
     
-    // 清除事件监听 - 移除滚轮事件监听
+    // 清除事件监听
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('touchmove', onDragMove);
-    document.removeEventListener('wheel', onWheelScroll); // 移除
+    document.removeEventListener('wheel', onWheelScroll);
     document.removeEventListener('mouseup', stopDrag);
     document.removeEventListener('touchend', stopDrag);
     
-    // 放置拖拽元素
-    if (dragPlaceholder && dragPlaceholder.parentNode) {
+    // 检查是否拖拽到尾元素
+    const tailElement = document.getElementById('tailElement');
+    const isOverTail = tailElement.classList.contains('drag-target');
+    
+    if (isOverTail) {
+      // 拖拽到尾元素，直接添加到列表末尾
       dragItem.classList.remove('dragging');
-      dragPlaceholder.replaceWith(dragItem);
-      
-      // 恢复普通定位
-      dragItem.style.position = '';
-      dragItem.style.top = '';
-      dragItem.style.left = '';
-      dragItem.style.width = '';
-      dragItem.style.zIndex = '';
-      dragItem.style.transform = '';
-      
-      // 移除占位符
+      messageList.appendChild(dragItem);
+      console.log('拖拽到尾元素，添加到列表末尾');
+    } else {
+      // 正常放置拖拽元素
+      if (dragPlaceholder && dragPlaceholder.parentNode) {
+        dragItem.classList.remove('dragging');
+        dragPlaceholder.replaceWith(dragItem);
+      }
+    }
+    
+    // 恢复普通定位
+    dragItem.style.position = '';
+    dragItem.style.top = '';
+    dragItem.style.left = '';
+    dragItem.style.width = '';
+    dragItem.style.zIndex = '';
+    dragItem.style.transform = '';
+    
+    // 移除占位符
+    if (dragPlaceholder && dragPlaceholder.parentNode) {
       dragPlaceholder.remove();
     }
     
+    // 清除尾元素样式
+    tailElement.classList.remove('drag-target');
+    
     // 清除视觉标记
     items.forEach(item => {
-      item.classList.remove(
-        'drag-over', 
-        'drag-over-top',
-        'drag-over-bottom'
-      );
+      item.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom');
     });
     
-    // 保存新顺序
-    updateMessageOrder();
+    // 检查是否有实际的位置变化
+    const newIndex = Array.from(messageList.querySelectorAll('.message-item')).indexOf(dragItem);
+    if (originalIndex !== newIndex) {
+      // 保存新顺序
+      updateMessageOrder();
+    }
     
     // 清除动画帧
     if (dragRaf) cancelAnimationFrame(dragRaf);
